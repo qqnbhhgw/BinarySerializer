@@ -9,8 +9,15 @@ namespace BinarySerialization.Test.Order
         [TestMethod]
         public void OrderTest()
         {
-            var order = new OrderClass {First = 1, Second = 2, Name = "Alice"};
-            Roundtrip(order, new byte[] {0x1, 0x2, 0x5, 0x41, 0x6c, 0x69, 0x63, 0x65});
+            var order = new OrderClass { First = 1, Second = 2, Name = "Alice" };
+            Roundtrip(order, new byte[] { 0x1, 0x2, 0x5, 0x41, 0x6c, 0x69, 0x63, 0x65 });
+        }
+
+        [TestMethod]
+        public void OrderTest2()
+        {
+            var order = new OrderClassWithDefaultFieldOrder { First = 1, Second = 2, Name = "Alice" };
+            Roundtrip(order, new byte[] { 0x5, 0x41, 0x6c, 0x69, 0x63, 0x65, 0x2, 0x1 });
         }
 
         [TestMethod]
@@ -47,8 +54,8 @@ namespace BinarySerialization.Test.Order
         [TestMethod]
         public void BaseClassComesBeforeDerivedClassTest()
         {
-            var order = new OrderDerivedClass {First = 1, Second = 2};
-            Roundtrip(order, new byte[] {0x1, 0x2});
+            var order = new OrderDerivedClass { First = 1, Second = 2 };
+            Roundtrip(order, new byte[] { 0x1, 0x2 });
         }
     }
 }

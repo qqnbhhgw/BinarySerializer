@@ -11,7 +11,7 @@ namespace BinarySerialization
         /// <summary>
         ///     Initializes a new instance of the <see cref="FieldOrderAttribute" /> class.
         /// </summary>
-        public FieldOrderAttribute(int order)
+        public FieldOrderAttribute(int order = int.MinValue)
         {
             Order = order;
         }

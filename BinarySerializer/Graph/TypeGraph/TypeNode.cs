@@ -15,40 +15,40 @@ namespace BinarySerialization.Graph.TypeGraph
         public static readonly Dictionary<Type, SerializedType> DefaultSerializedTypes =
             new Dictionary<Type, SerializedType>
             {
-                {typeof(bool), SerializedType.Int1},
-                {typeof(sbyte), SerializedType.Int1},
-                {typeof(byte), SerializedType.UInt1},
-                {typeof(char), SerializedType.UInt2},
-                {typeof(short), SerializedType.Int2},
-                {typeof(ushort), SerializedType.UInt2},
-                {typeof(int), SerializedType.Int4},
-                {typeof(uint), SerializedType.UInt4},
-                {typeof(long), SerializedType.Int8},
-                {typeof(ulong), SerializedType.UInt8},
-                {typeof(float), SerializedType.Float4},
-                {typeof(double), SerializedType.Float8},
-                {typeof(string), SerializedType.TerminatedString},
-                {typeof(byte[]), SerializedType.ByteArray}
+                { typeof(bool), SerializedType.Int1 },
+                { typeof(sbyte), SerializedType.Int1 },
+                { typeof(byte), SerializedType.UInt1 },
+                { typeof(char), SerializedType.UInt2 },
+                { typeof(short), SerializedType.Int2 },
+                { typeof(ushort), SerializedType.UInt2 },
+                { typeof(int), SerializedType.Int4 },
+                { typeof(uint), SerializedType.UInt4 },
+                { typeof(long), SerializedType.Int8 },
+                { typeof(ulong), SerializedType.UInt8 },
+                { typeof(float), SerializedType.Float4 },
+                { typeof(double), SerializedType.Float8 },
+                { typeof(string), SerializedType.TerminatedString },
+                { typeof(byte[]), SerializedType.ByteArray }
             };
 
         public static readonly Dictionary<SerializedType, object> SerializedTypeDefault =
             new Dictionary<SerializedType, object>
             {
-                {SerializedType.Default, null},
-                {SerializedType.Int1, default(sbyte)},
-                {SerializedType.UInt1, default(byte)},
-                {SerializedType.Int2, default(short)},
-                {SerializedType.UInt2, default(ushort)},
-                {SerializedType.Int4, default(int)},
-                {SerializedType.UInt4, default(uint)},
-                {SerializedType.Int8, default(long)},
-                {SerializedType.UInt8, default(ulong)},
-                {SerializedType.Float4, default(float)},
-                {SerializedType.Float8, default(double)},
-                {SerializedType.TerminatedString, default(string)},
-                {SerializedType.SizedString, default(string)},
-                {SerializedType.LengthPrefixedString, default(string)},
-                {SerializedType.ByteArray, default(byte[])}
+                { SerializedType.Default, null },
+                { SerializedType.Int1, default(sbyte) },
+                { SerializedType.UInt1, default(byte) },
+                { SerializedType.Int2, default(short) },
+                { SerializedType.UInt2, default(ushort) },
+                { SerializedType.Int4, default(int) },
+                { SerializedType.UInt4, default(uint) },
+                { SerializedType.Int8, default(long) },
+                { SerializedType.UInt8, default(ulong) },
+                { SerializedType.Float4, default(float) },
+                { SerializedType.Float8, default(double) },
+                { SerializedType.TerminatedString, default(string) },
+                { SerializedType.SizedString, default(string) },
+                { SerializedType.LengthPrefixedString, default(string) },
+                { SerializedType.ByteArray, default(byte[]) }
             };
 
         private readonly SerializedType? _serializedType;
@@ -126,7 +126,8 @@ namespace BinarySerialization.Graph.TypeGraph
             NullableUnderlyingType = Nullable.GetUnderlyingType(Type);
 
             var attributes = memberInfo.GetCustomAttributes(true).ToList();
-            var parentAttributeNames = parentType.GetTypeInfo().GetCustomAttributes<IgnoreMemberAttribute>().Select(attribute => attribute.Name);
+            var parentAttributeNames = parentType.GetTypeInfo().GetCustomAttributes<IgnoreMemberAttribute>()
+                .Select(attribute => attribute.Name);
 
             IsIgnored = parentAttributeNames.Any(name => name == Name) || attributes.OfType<IgnoreAttribute>().Any();
 
@@ -139,7 +140,7 @@ namespace BinarySerialization.Graph.TypeGraph
             var fieldOrderAttribute = attributes.OfType<FieldOrderAttribute>().SingleOrDefault();
             if (fieldOrderAttribute != null)
             {
-                Order = fieldOrderAttribute.Order;
+                Order = fieldOrderAttribute.Order != int.MinValue ? fieldOrderAttribute.Order : GetMemberFieldOrder(memberInfo, parentType);
             }
 
             var serializeAsAttribute = attributes.OfType<SerializeAsAttribute>().SingleOrDefault();
@@ -172,7 +173,7 @@ namespace BinarySerialization.Graph.TypeGraph
                              serializedType == SerializedType.TerminatedString ||
                              serializedType == SerializedType.SizedString;
             }
-            
+
             // setup bindings
             FieldLengthBindings = GetBindings<FieldLengthAttribute>(attributes);
             FieldBitLengthBindings = GetBindings<FieldBitLengthAttribute>(attributes);
@@ -212,8 +213,8 @@ namespace BinarySerialization.Graph.TypeGraph
             if (SerializeWhenAttributes.Count > 0)
             {
                 SerializeWhenBindings = new ReadOnlyCollection<ConditionalBinding>(
-                    serializeWhenAttributes.Select(
-                        attribute => new ConditionalBinding(attribute, GetBindingLevel(attribute.Binding))).ToList());
+                    serializeWhenAttributes.Select(attribute => new ConditionalBinding(attribute, GetBindingLevel(attribute.Binding)))
+                        .ToList());
             }
 
 #pragma warning disable CS0618
@@ -224,8 +225,8 @@ namespace BinarySerialization.Graph.TypeGraph
             if (SerializeWhenNotAttributes.Count > 0)
             {
                 SerializeWhenNotBindings = new ReadOnlyCollection<ConditionalBinding>(
-                    serializeWhenNotAttributes.Select(
-                        attribute => new ConditionalBinding(attribute, GetBindingLevel(attribute.Binding))).ToList());
+                    serializeWhenNotAttributes.Select(attribute => new ConditionalBinding(attribute, GetBindingLevel(attribute.Binding)))
+                        .ToList());
             }
 
             // don't inherit subtypes if this is itself a subtype
@@ -235,7 +236,7 @@ namespace BinarySerialization.Graph.TypeGraph
 
                 SubtypeAttributes = new ReadOnlyCollection<SubtypeBaseAttribute>(subtypeAttributes);
                 SubtypeBindings = GetBindings(subtypeAttributes, Type);
-                
+
                 SubtypeDefaultAttribute = attributes.OfType<SubtypeDefaultAttribute>().SingleOrDefault();
 
                 if (SubtypeDefaultAttribute != null)
@@ -252,7 +253,7 @@ namespace BinarySerialization.Graph.TypeGraph
                 {
                     SubtypeFactoryBinding = GetBinding(subtypeFactoryAttribute);
                     SubtypeFactory =
-                        (ISubtypeFactory) subtypeFactoryAttribute.FactoryType.GetConstructor(Type.EmptyTypes)?.Invoke(null);
+                        (ISubtypeFactory)subtypeFactoryAttribute.FactoryType.GetConstructor(Type.EmptyTypes)?.Invoke(null);
                 }
             }
 
@@ -291,7 +292,7 @@ namespace BinarySerialization.Graph.TypeGraph
             {
                 ItemSubtypeFactoryBinding = GetBinding(itemSubtypeFactoryAttribute);
                 ItemSubtypeFactory =
-                    (ISubtypeFactory) itemSubtypeFactoryAttribute.FactoryType.GetConstructor(Type.EmptyTypes)?.Invoke(null);
+                    (ISubtypeFactory)itemSubtypeFactoryAttribute.FactoryType.GetConstructor(Type.EmptyTypes)?.Invoke(null);
             }
 
             ItemSubtypeDefaultAttribute = attributes.OfType<ItemSubtypeDefaultAttribute>().SingleOrDefault();
@@ -311,7 +312,6 @@ namespace BinarySerialization.Graph.TypeGraph
                 ItemSerializeUntilBinding = GetBinding(ItemSerializeUntilAttribute);
             }
         }
-
 
         public MemberInfo MemberInfo { get; }
         public Type Type { get; }
@@ -490,9 +490,8 @@ namespace BinarySerialization.Graph.TypeGraph
             }
 
             var bindings =
-                typeAttributes.Select(
-                    attribute =>
-                        new Binding(attribute, GetBindingLevel(attribute.Binding)));
+                typeAttributes.Select(attribute =>
+                    new Binding(attribute, GetBindingLevel(attribute.Binding)));
 
             return new BindingCollection(bindings);
         }
@@ -513,9 +512,8 @@ namespace BinarySerialization.Graph.TypeGraph
             }
 
             var bindings =
-                attributes.Select(
-                    attribute =>
-                        new Binding(attribute, GetBindingLevel(attribute.Binding)));
+                attributes.Select(attribute =>
+                    new Binding(attribute, GetBindingLevel(attribute.Binding)));
 
             var toSourceAttributes = attributes.Where(attribute => attribute.BindingMode != BindingMode.OneWayToSource)
                 .ToList();
@@ -578,6 +576,12 @@ namespace BinarySerialization.Graph.TypeGraph
             }
 
             throw new BindingException("No ancestor found.");
+        }
+
+        private int? GetMemberFieldOrder(MemberInfo memberInfo, Type parentType)
+        {
+            var memberInfos = parentType.GetMembers(BindingFlags.Instance | BindingFlags.Public).ToList();
+            return memberInfos.IndexOf(memberInfo);
         }
     }
 }
